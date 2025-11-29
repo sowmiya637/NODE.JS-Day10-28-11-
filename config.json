@@ -1,0 +1,9 @@
+{
+  "development": {
+    "username": "root",
+    "password": "Sowmiya@14",
+    "database": "migrationdb",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
