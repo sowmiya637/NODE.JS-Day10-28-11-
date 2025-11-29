@@ -1,39 +1,47 @@
-const sequelize = require("./config/database");
-const User = require("./models/User");
+require("reflect-metadata");
+const { DataSource } = require("typeorm");
+const { User } = require("./User");
 
-sequelize.sync({ force: true }) 
-  .then(async () => {
-    console.log("Tables created");
+// Connect to MySQL
+const AppDataSource = new DataSource({
+    type: "mysql",
+    host: "localhost",
+    port: 3306,
+    username: "root",
+    password: "Sowmiya@14",
+    database: "mysql",
+    synchronize: true, // auto-create tables
+    logging: true,
+    entities: [User],
+});
 
-     // CREATE
- 
-    const user = await User.create({
-      name: "Sowmiya",
-      email: "s@gmail.com"
-    });
-    console.log("User created:", user.toJSON());
+async function main() {
+    await AppDataSource.initialize();
+    console.log("Database connected");
 
-   // READ
-    
-    const allUsers = await User.findAll();
-    console.log("All users:", allUsers);
+    const userRepo = AppDataSource.getRepository(User);
 
-    const oneUser = await User.findOne({
-      where: { email: "s@gmail.com" }
-    });
-    console.log("Single user:", oneUser.toJSON());
+    // CREATE OR IGNORE DUPLICATE
+    let user = await userRepo.findOneBy({ email: "s@gmail.com" });
+    if (!user) {
+        user = userRepo.create({ name: "Sowmiya", email: "s@gmail.com" });
+        await userRepo.save(user);
+        console.log("User created:", user);
+    } else {
+        console.log("User already exists:", user);
+    }
 
-      // UPDATE
- 
-    await User.update(
-      { name: "Sowmya R" },
-      { where: { email: "s@gmail.com" } }
-    );
+    // READ
+    const users = await userRepo.find();
+    console.log("All users:", users);
+
+    // UPDATE
+    await userRepo.update({ email: "s@gmail.com" }, { name: "Sowmya R" });
     console.log("User updated");
 
     // DELETE
+    // await userRepo.delete({ email: "s@gmail.com" });
+    // console.log("User deleted");
+}
 
-    await User.destroy({ where: { email: "s@gmail.com" } });
-    console.log("User deleted");
-  })
-  .catch(err => console.log(err));
+main().catch(console.error);
